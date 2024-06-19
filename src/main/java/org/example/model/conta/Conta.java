@@ -2,6 +2,9 @@ package org.example.model.conta;
 
 import lombok.Getter;
 import lombok.ToString;
+import org.example.exceptions.BalanceException;
+import org.example.exceptions.InvalidValueException;
+import org.example.exceptions.LimitExceededException;
 import org.example.model.Cliente;
 
 import java.util.List;
@@ -29,25 +32,43 @@ public abstract class Conta implements IConta {
         this.tipoConta = tipoConta;
     }
 
-    public void sacar(double valor) {
+    public void sacar(double valor) throws BalanceException, InvalidValueException, LimitExceededException {
+        if(valor <= 0) {
+            throw new InvalidValueException("O valor de saque deve ser maior que zero.");
+        }
+
+        limitePorTransacao(valor);
+
         if(valor <= saldo) {
             saldo -= valor;
         } else {
-            System.out.println("Saldo insuficiente");
+            throw new BalanceException("Saldo insuficiente");
         }
     }
 
-    public void depositar(double valor) {
+    public void depositar(double valor) throws InvalidValueException {
+        if(valor <= 0) {
+            throw new InvalidValueException("O valor de depósito deve ser maior que zero.");
+        }
+
         saldo += valor;
     }
 
-    public void transferir(double valor, Conta contaDestino) {
-        if(valor <= saldo) {
-            this.sacar(valor);
-            contaDestino.depositar(valor);
-            System.out.println("Transferência realizada no valor de: R$" + valor);
-        } else {
-            System.out.println("Saldo insuficiente");
+    public void transferir(double valor, Conta contaDestino) throws BalanceException, InvalidValueException, LimitExceededException {
+        if(valor <= 0) {
+            throw new InvalidValueException("O valor de transferência deve ser maior que zero.");
+        }
+
+        limitePorTransacao(valor);
+
+        this.sacar(valor);
+        contaDestino.depositar(valor);
+        System.out.println("Transferência realizada no valor de: R$" + valor);
+    }
+
+    private void limitePorTransacao(double valor) throws LimitExceededException {
+        if(valor > 2000) {
+            throw new LimitExceededException("Limite por transação excedido.");
         }
     }
 
